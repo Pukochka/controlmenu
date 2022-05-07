@@ -303,25 +303,6 @@
           },
         };
       },
-      getMenu() {
-        this.requestWaiting = true;
-        axios
-          .post(
-            'https://api.bot-t.ru/v1/bot/keyboard/inline-keyboard/view?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA',
-            'bot_id=889&menu_id=577'
-          )
-          .then((response) => {
-            for (let line of JSON.parse(response.data).data) {
-              this.lines.push(line.lines);
-            }
-            this.menu = JSON.parse(response.data).data[0].id;
-            console.log(this.lines);
-            console.log(this.menu);
-            if (response.status == 200) {
-              this.requestWaiting = false;
-            }
-          });
-      },
       request(req, menu_id, line_id, button_id, type, text, action, sort) {
         console.log(
           req +
