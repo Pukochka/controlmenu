@@ -290,9 +290,10 @@
             for (let rout of JSON.parse(response.data).data) {
               this.routes.push(rout);
             }
-            console.log(this.routes);
+            // console.log(this.routes);
           });
       },
+      
       configButton(deletebtn) {
         if (deletebtn) {
           this.$emit('deleteButton', this.data.id);

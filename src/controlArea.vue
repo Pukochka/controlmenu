@@ -292,6 +292,20 @@
         };
         console.log(line);
       },
+      add(){
+        const json = JSON.stringify();
+        axios
+          .post(
+            'https://api.bot-t.ru/v1/bot/main/add-button-in-line?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA',{bot_id : 889 , line_id: 155623, type: 1,text:'dsadasd', action:'category/view?isNewMessage=true&id=100693' })
+          .then((response) => {
+            console.log(json)
+            console.log(response)
+            // for (let rout of JSON.parse(response.data).data) {
+            //   console.log(rout);
+            // }
+            
+          });
+      },
       addLine() {
         this.dialSettings = !this.dialSettings;
         this.control = true;
@@ -332,6 +346,7 @@
               this.lines = [];
               for (let line of JSON.parse(response.data).data) {
                 this.lines.push(line.lines);
+                console.log(this.lines)
               }
               if (response.status == 200) {
                 this.requestWaiting = false;
@@ -381,6 +396,7 @@
     },
     mounted() {
       this.request('view', 577, null, null, null, null, null, null);
+      this.add()
     },
   };
 </script>
