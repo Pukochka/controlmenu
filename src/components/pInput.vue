@@ -2,6 +2,7 @@
   <div class="label">{{ label }}</div>
   <input
     class="input"
+    :type="type"
     :style="{ borderBottom: `1px solid ${bordercolor};` }"
     :value="modelValue"
     :maxlength="+max"
@@ -30,6 +31,11 @@ export default {
     text: {
       type: String,
       required: false,
+    },
+    type: {
+      type: String,
+      required: false,
+      default: "text",
     },
     modelValue: {
       type: String,
