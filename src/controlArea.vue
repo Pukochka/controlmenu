@@ -204,7 +204,7 @@
           null
         );
       },
-      requestAddBtnWithLine(menu_id, type, text, action) {
+      requestAddBtnWithLine( type, text, action) {
         this.request(
           'add-button-with-line',
           this.menu,
