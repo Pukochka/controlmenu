@@ -315,29 +315,33 @@
             }${sort ? `&sort=${sort}` : ''}`
         );
         this.requestWaiting = true;
-        axios
-          .post(
-            `https://api.bot-t.ru/v1/bot/keyboard/inline-keyboard/${req}?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA`,
-            `bot_id=889${menu_id ? `&menu_id=${menu_id}` : ''}${
-              line_id ? `&line_id=${line_id}` : ''
-            }${button_id ? `&id=${button_id}` : ''}${
-              type ? `&type=${type}` : ''
-            }${text ? `&text=${text}` : ''}${
-              action ? `&action=${action}` : ''
-            }${sort ? `&sort=${sort}` : ''}`
-          )
-          .then((response) => {
-            this.lines = [];
-            for (let line of JSON.parse(response.data).data) {
-              this.lines.push(line.lines);
-            }
-            if (response.status == 200) {
-              this.requestWaiting = false;
-            }
-            setTimeout(() => {
-              this.scrollArea();
-            }, 10);
-          });
+        try {
+          axios
+            .post(
+              `https://api.bot-t.ru/v1/bot/keyboard/inline-keyboard/${req}?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA`,
+              `bot_id=889${menu_id ? `&menu_id=${menu_id}` : ''}${
+                line_id ? `&line_id=${line_id}` : ''
+              }${button_id ? `&id=${button_id}` : ''}${
+                type ? `&type=${type}` : ''
+              }${text ? `&text=${text}` : ''}${
+                action ? `&action=${action}` : ''
+              }${sort ? `&sort=${sort}` : ''}`
+            )
+            .then((response) => {
+              this.lines = [];
+              for (let line of JSON.parse(response.data).data) {
+                this.lines.push(line.lines);
+              }
+              if (response.status == 200) {
+                this.requestWaiting = false;
+              }
+              setTimeout(() => {
+                this.scrollArea();
+              }, 10);
+            });
+        } catch (err) {
+          console.log(err);
+        }
       },
       selectBtn(btn) {
         this.dialSettings = !this.dialSettings;
