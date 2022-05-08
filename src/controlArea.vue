@@ -205,6 +205,7 @@
         );
       },
       requestAddBtnWithLine( type, text, action) {
+        console.log( this.menu)
         this.request(
           'add-button-with-line',
           this.menu,
@@ -335,6 +336,8 @@
               if (response.status == 200) {
                 this.requestWaiting = false;
               }
+              this.menu = JSON.parse(response.data).data[0].id
+
               setTimeout(() => {
                 this.scrollArea();
               }, 10);

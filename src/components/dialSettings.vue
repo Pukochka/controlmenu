@@ -319,7 +319,6 @@
         if (this.data.req == 'add-line') {
           this.$emit(
             'addLine',
-            577,
             this.selectAction.type,
             this.text.value,
             this.chooseRoute(this.selectAction, this.selectRoute)
