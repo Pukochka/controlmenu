@@ -651,7 +651,6 @@ export default {
   }
   .actions_btn {
     font-size: 12px !important;
-    padding: 4px 8px !important;
   }
 }
 </style>
