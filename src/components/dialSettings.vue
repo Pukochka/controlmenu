@@ -39,13 +39,16 @@
         <div class="dial_container_head">
           {{ (control ? "Добавить" : "Изменить") + " текст" }}
         </div>
-        <textarea
-          :maxlength="textarea.max"
-          class="textarea"
-          v-model="textarea.value"
-        ></textarea>
+        <div class="area">
+          <textarea
+            :maxlength="textarea.max"
+            class="textarea"
+            v-model="textarea.value"
+          ></textarea>
+          <div class="textarea_length">{{ textarea.outlength }}</div>
+        </div>
+
         <p-input-required :model="textarea" />
-        <div class="textarea_length">{{ textarea.outlength }}</div>
       </div>
 
       <div class="dial_container" v-if="selectAction.type == 1">
@@ -86,7 +89,7 @@
         <p-select :select="selectRouteText">
           <div
             class="actions_item"
-            v-for="(item, key) in check(selectRoute.value)[0]"
+            v-for="(item, key) in selectRoute.value[0]"
             :key="key"
             @click="selectRouteValue(item, key)"
           >
@@ -103,7 +106,7 @@
         <p-btn
           class="actions_btn"
           label="Отмена"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -113,7 +116,7 @@
           class="actions_btn"
           v-if="!control"
           label="Удалить кнопку"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -122,7 +125,7 @@
         <p-btn
           class="actions_btn"
           :label="control ? 'Добавить' : 'Изменить'"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -140,7 +143,7 @@
         <p-btn
           class="actions_btn"
           label="Отмена"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -149,7 +152,7 @@
         <p-btn
           class="actions_btn"
           label="Подтвердить"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -192,8 +195,31 @@ export default {
     "updateButton",
     "addButton",
   ],
+  props: {
+    model: {
+      type: Boolean,
+      required: false,
+    },
+    data: {
+      type: Object,
+      required: false,
+    },
+    control: {
+      type: Boolean,
+      required: false,
+    },
+  },
   setup() {
     return {
+      dangerRoute: ref(false),
+      dangerKey: ref(false),
+      dangerAction: ref(false),
+      selectRouteKey: ref(""),
+      selectRouteText: ref(""),
+      routes: ref([]),
+      sure: ref(false),
+      currentRoute: ref(""),
+      type: ref(0),
       text: ref({
         value: "",
         required: false,
@@ -204,7 +230,7 @@ export default {
         value: "",
         required: false,
         min: 8,
-        max: 30,
+        max: 40,
       }),
       textarea: ref({
         value: "",
@@ -213,18 +239,6 @@ export default {
         max: 100,
         outlength: 100,
       }),
-      categoryCheck: ref(false),
-      type: ref(0),
-      dangerRoute: ref(false),
-      actionGroup: ref(false),
-      routeGroup: ref(false),
-      selectRouteKey: ref(""),
-      selectRouteText: ref(""),
-      dangerKey: ref(false),
-      dangerAction: ref(false),
-      routes: ref([]),
-      sure: ref(false),
-      rot: ref(""),
       selectRoute: ref({
         text: "Выберите путь",
         route: "",
@@ -260,28 +274,8 @@ export default {
       ]),
     };
   },
-  props: {
-    model: {
-      type: Boolean,
-      required: false,
-    },
-    data: {
-      type: Object,
-      required: false,
-    },
-    control: {
-      type: Boolean,
-      required: false,
-    },
-  },
+
   methods: {
-    check(value) {
-      if (value.length > 0) {
-        return value;
-      } else {
-        return [];
-      }
-    },
     selectRouteValue(item, key) {
       this.dangerKey = false;
       if (this.selectRoute.type == "category") {
@@ -295,7 +289,6 @@ export default {
     selectType(action) {
       this.dangerAction = false;
       this.selectAction = action;
-      console.log(this.selectAction);
       if (this.selectAction.type > 3) {
         this.dangerAction = true;
       }
@@ -342,20 +335,26 @@ export default {
     },
 
     configButton(deletebtn) {
+      this.dangerRoute = false;
+      this.dangerKey = false;
       if (deletebtn) {
         this.$emit("deleteButton", this.data.id);
         this.closeSettings();
         return;
       }
-      if (this.selectAction.type > 1) {
+      if (this.selectAction.type > 3) {
         return;
       }
-      this.dangerRoute = false;
-      this.dangerKey = false;
+
       if (
         !this.action.required ||
         !this.text.required ||
-        !this.validateData(this.selectAction, this.selectRoute)
+        this.selectAction.type == 2
+          ? !this.textarea.required
+          : false || this.selectAction.type == 3
+          ? !this.textarea.required
+          : false ||
+            !this.validateDataRoute(this.selectAction, this.selectRoute)
       ) {
         return;
       }
@@ -391,7 +390,7 @@ export default {
       let route;
       if (actions.type == 0) {
         route = this.action.value;
-      } else {
+      } else if (actions.type == 1) {
         if (routes.value?.length > 0) {
           if (routes.type) {
             route = this.selectRouteKey;
@@ -401,10 +400,16 @@ export default {
         } else {
           route = routes.route;
         }
+      } else if (actions.type == 2) {
+        route = this.textarea.value;
+      } else if (actions.type == 3) {
+        route = this.textarea.value;
+      } else if (actions.type == 4) {
+        route = this.textarea.value;
       }
       return route;
     },
-    validateData(actions, routes) {
+    validateDataRoute(actions, routes) {
       if (actions.type == 1) {
         routes.route == ""
           ? (this.dangerRoute = true)
@@ -430,6 +435,8 @@ export default {
         text: "Выберите путь",
         route: "",
       };
+      this.action.value = "https://";
+      this.textarea.value = "Пример приветствия";
       this.selectAction = {};
 
       this.text.value = this.data.data.text;
@@ -441,7 +448,6 @@ export default {
       if (this.data.type == 0) {
         this.action.value = this.data.data.action;
       } else if (this.data.type == 1) {
-        this.action.value = "https://";
         this.selectRoute = this.routes.find(
           (r) => r.route == this.data.data.action
         );
@@ -455,13 +461,15 @@ export default {
                   let delLength = item.length + r.identifier.length;
                   let delRoute = [...this.data.data.action];
                   delRoute.splice(-delLength, delLength);
-                  this.rot = delRoute.join("");
+                  this.currentRoute = delRoute.join("");
                   this.selectRouteText = r.value[0][item];
                 }
               }
             }
           });
-          this.selectRoute = this.routes.find((r) => r.route == this.rot);
+          this.selectRoute = this.routes.find(
+            (r) => r.route == this.currentRoute
+          );
           if (category) {
             this.routes.forEach((r) => {
               if (r.type) {
@@ -493,6 +501,10 @@ export default {
             ? this.selectRoute.text_value
             : "";
         }
+      } else if (this.data.type == 2) {
+        this.textarea.value = this.data.data.action;
+      } else if (this.data.type == 3) {
+        this.textarea.value = this.data.data.action;
       }
     },
     "text.value"(value) {
@@ -514,7 +526,7 @@ export default {
       }
     },
     "textarea.value"(value) {
-      this.textarea.outlength -= value.length;
+      this.textarea.outlength = this.textarea.max - value.length;
       if (value.length < this.textarea.min) {
         this.textarea.required = false;
       } else if (value.length == this.textarea.max) {
@@ -532,8 +544,9 @@ export default {
 <style lang="scss" scoped>
 .dial {
   &_header {
-    padding: 10px;
+    padding: 8px 10px;
     font-size: 24px;
+    font-weight: 500;
   }
   &_container {
     padding: 10px;
@@ -545,14 +558,26 @@ export default {
     }
   }
 }
-.textarea {
+.area {
+  position: relative;
   width: 95%;
+  max-height: 150px;
+}
+.textarea {
+  width: 100%;
   min-height: 50px;
   padding: 5px;
   resize: vertical;
   border-radius: 4px;
   outline: none;
+  font-family: "Roboto";
   box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
+  &_length {
+    position: absolute;
+    top: -17px;
+    right: 0px;
+    font-size: 12px;
+  }
 }
 .center {
   display: flex;
@@ -568,7 +593,7 @@ export default {
   display: flex;
   justify-content: flex-end;
   align-self: end;
-  padding: 8px;
+  padding: 4px;
   &_item {
     font-size: 14px;
     font-weight: 300;
@@ -583,6 +608,7 @@ export default {
   color: red;
   font-size: 11px;
 }
+
 .popup {
   &_item {
     padding: 5px 10px;
@@ -625,7 +651,7 @@ export default {
   }
   .actions_btn {
     font-size: 12px !important;
-    padding: 3px 5px !important;
+    padding: 4px 8px !important;
   }
 }
 </style>

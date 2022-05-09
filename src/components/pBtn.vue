@@ -74,9 +74,9 @@ export default {
   justify-content: center;
   align-items: center;
   padding: 5px;
-  margin: 5px;
+  margin: 2px;
   color: #fff;
-  border-radius: 8px;
+  border-radius: 4px;
   font-weight: 500;
   background-color: #aaa;
   position: relative;

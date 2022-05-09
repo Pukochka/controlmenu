@@ -57,6 +57,7 @@
                       class="button"
                       v-for="(btn, index) in btns.buttons"
                       :key="index"
+                      :class="{ break: wordBreak(btn.data.text) }"
                       @click="selectBtn(btn, btns)"
                     >
                       <div class="button_helper"></div>
@@ -119,7 +120,7 @@
         <p-btn
           class="actions_btn"
           label="Отмена"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -128,7 +129,7 @@
         <p-btn
           class="actions_btn"
           label="Подтвердить"
-          padding="5px 10px"
+          padding="8px 16px"
           color="transparent"
           textcolor="#222"
           size="14px"
@@ -166,6 +167,14 @@ export default {
     return {
       lines: ref([]),
       dialSettings: ref(false),
+      deleteLineDial: ref(false),
+      danger: ref(true),
+      configButton: ref({}),
+      selectLine: ref(0),
+      requestWaiting: ref(false),
+      dialDrag: ref(false),
+      menu: ref(0),
+      control: ref(false),
       select: ref({
         data: {
           text: "",
@@ -173,16 +182,6 @@ export default {
         },
         type: 0,
       }),
-      control: ref(false),
-      deleteLineDial: ref(false),
-      danger: ref(true),
-      configButton: ref({}),
-      selectLine: ref(0),
-      requestWaiting: ref(false),
-      show: ref(false),
-      drag: ref(false),
-      dialDrag: ref(false),
-      menu: ref(0),
     };
   },
   methods: {
@@ -281,6 +280,13 @@ export default {
         },
       };
     },
+    wordBreak(word) {
+      if ([...word].includes(" ")) {
+        return false;
+      } else {
+        return true;
+      }
+    },
     addLine() {
       this.dialSettings = !this.dialSettings;
       this.control = true;
@@ -328,19 +334,22 @@ export default {
         console.log(err);
       }
     },
-    createPostParams(menu_id, line_id, button_id, type, text, action, sort) {
+    createPostParams(menu_id, line_id, id, type, text, action, sort) {
       const params = {
         bot_id: 889,
       };
+      console.log(menu_id, line_id, id, type, text, action, sort);
       // let args = Array.from(arguments);
+
+      console.log(params);
       if (menu_id) {
         params.menu_id = menu_id;
       }
       if (line_id) {
         params.line_id = line_id;
       }
-      if (button_id) {
-        params.id = button_id;
+      if (id) {
+        params.id = id;
       }
       if (type) {
         params.type = type;
@@ -395,7 +404,6 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap");
 * {
   margin: 0;
   padding: 0;
@@ -405,13 +413,10 @@ export default {
   width: 100%;
   display: flex;
   justify-content: center;
-  font-family: "Montserrat", "sans-serif";
+  font-family: "Roboto", "sans-serif";
   direction: ltr;
-}
-body {
-  position: relative;
-  min-width: 150px;
-  font-family: "Montserrat", "sans-serif";
+  margin: 0;
+  padding: 24px;
 }
 .flex {
   display: flex;
@@ -425,12 +430,9 @@ body {
   }
 }
 .header {
-  padding: 10px;
+  padding: 8px 10px;
   font-size: 24px;
   font-weight: 500;
-}
-.bg-transparent {
-  background: transparent !important;
 }
 .card_area {
   width: 100%;
@@ -456,6 +458,10 @@ body {
   user-select: none;
   pointer-events: all;
   position: relative;
+  word-break: break-word;
+  &.break {
+    word-break: break-all;
+  }
   &:hover .button_helper {
     opacity: 1;
   }
@@ -476,6 +482,7 @@ body {
   &.line {
     width: auto;
     flex-grow: 1;
+    font-weight: 500;
   }
   &.delete {
     font-size: 24px;
@@ -569,7 +576,7 @@ body {
   display: flex;
   justify-content: flex-end;
   align-self: end;
-  padding: 8px;
+  padding: 4px;
   &_item {
     font-size: 14px;
     font-weight: 300;
@@ -598,7 +605,7 @@ body {
     }
     &::-webkit-scrollbar-thumb {
       height: 6px;
-      background: rgb(159, 157, 157);
+      background: rgb(169, 167, 167);
       border-radius: 5px;
     }
     &::-webkit-scrollbar-track {

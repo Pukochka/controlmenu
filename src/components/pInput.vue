@@ -64,9 +64,10 @@ export default {
 .input {
   border: none;
   outline: none;
-  height: 30px;
+  height: 24px;
   width: 100%;
   font-size: 15px;
+  margin: 4px;
   border-bottom: 1px solid #aaa;
 }
 </style>
