@@ -38,7 +38,7 @@
             <template #item="{ element }">
               <div class="button my-button">
                 <div class="button_helper"></div>
-                {{ threeLetters(element.data.text) }}
+                <div class="wrapword">{{ element.data.text }}</div>
               </div>
             </template>
           </draggable>
@@ -175,7 +175,11 @@ export default {
   padding: 8px 10px;
   font-size: 24px;
 }
-
+.wrapword {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
 .button {
   width: 100px;
   height: 40px;
@@ -227,6 +231,9 @@ export default {
   &-between {
     justify-content: space-between;
   }
+}
+.max {
+  min-width: 60%;
 }
 .info {
   width: 22px;

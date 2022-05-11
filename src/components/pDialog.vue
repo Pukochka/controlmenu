@@ -41,6 +41,7 @@ export default {
       opacity: 1;
     }
   }
+
   &_inner {
     display: flex;
     justify-content: center;

@@ -77,6 +77,9 @@
           :max="action.max"
         />
         <p-input-required :model="action" />
+        <div class="danger" v-if="dangerActionValue">
+          Не правильное значение ссылки пример : https://bot-t.ru
+        </div>
       </div>
       <div
         class="dial_container"
@@ -214,6 +217,7 @@ export default {
       dangerRoute: ref(false),
       dangerKey: ref(false),
       dangerAction: ref(false),
+      dangerActionValue: ref(false),
       selectRouteKey: ref(""),
       selectRouteText: ref(""),
       routes: ref([]),
@@ -335,6 +339,7 @@ export default {
     },
 
     configButton(deletebtn) {
+      this.dangerActionValue = false;
       this.dangerRoute = false;
       this.dangerKey = false;
       if (deletebtn) {
@@ -345,17 +350,23 @@ export default {
       if (this.selectAction.type > 3) {
         return;
       }
-
-      if (
-        !this.action.required ||
-        !this.text.required ||
-        this.selectAction.type == 2
-          ? !this.textarea.required
-          : false || this.selectAction.type == 3
-          ? !this.textarea.required
-          : false ||
-            !this.validateDataRoute(this.selectAction, this.selectRoute)
-      ) {
+      if (!this.action.required || !this.text.required) {
+        return;
+      }
+      if (this.selectAction.type == 2) {
+        if (!this.textarea.required) {
+          return;
+        }
+      }
+      if (this.selectAction.type == 3) {
+        if (!this.textarea.required) {
+          return;
+        }
+      }
+      if (!this.validateDataRoute(this.selectAction, this.selectRoute)) {
+        return;
+      }
+      if (!this.validateAtionValue(this.action.value, this.selectAction.type)) {
         return;
       }
 
@@ -420,6 +431,20 @@ export default {
         if (!this.dangerRoute && !this.dangerKey) {
           return true;
         } else {
+          return false;
+        }
+      } else {
+        return true;
+      }
+    },
+    validateAtionValue(value, type) {
+      if (type == 0) {
+        if (
+          value.match(/(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+\.(?:\.[a-z]{2,3})/)
+        ) {
+          return true;
+        } else {
+          this.dangerActionValue = true;
           return false;
         }
       } else {
@@ -650,7 +675,7 @@ export default {
     font-size: 14px;
   }
   .actions_btn {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
 }
 </style>
