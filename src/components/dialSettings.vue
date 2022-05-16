@@ -8,52 +8,18 @@
       <div class="dial_container">
         <p-input
           :label="(control ? 'Введите' : 'Измененить') + ' название кнопки'"
-          v-model="text.value"
-          :max="text.max"
+          v-model="message.value"
+          :max="message.max"
         />
-        <p-input-required :model="text" />
+        <div class="danger" v-if="validateRepeatButton()">
+          Кнопка с таким названием уже есть
+        </div>
+        <p-input-required :model="message" />
       </div>
+
       <div class="dial_container">
         <div class="dial_container_head">
-          {{ (control ? "Добавить" : "Изменить") + " тип кнопки" }}
-        </div>
-        <p-select :select="selectAction.text">
-          <div
-            class="actions_item"
-            v-for="(item, index) in actions"
-            :key="index"
-            @click="selectType(item)"
-          >
-            {{ item.text }}
-          </div>
-        </p-select>
-        <div class="danger" v-if="dangerAction">
-          Данный тип действия пока в разработке
-        </div>
-      </div>
-
-      <div
-        class="dial_container"
-        v-if="selectAction.type == 2 || selectAction.type == 3"
-      >
-        <div class="dial_container_head">
-          {{ (control ? "Добавить" : "Изменить") + " текст" }}
-        </div>
-        <div class="area">
-          <textarea
-            :maxlength="textarea.max"
-            class="textarea"
-            v-model="textarea.value"
-          ></textarea>
-          <div class="textarea_length">{{ textarea.outlength }}</div>
-        </div>
-
-        <p-input-required :model="textarea" />
-      </div>
-
-      <div class="dial_container" v-if="selectAction.type == 1">
-        <div class="dial_container_head">
-          {{ (control ? "Добавить" : "Изменить") + " готовый путь кнопки" }}
+          {{ (control ? "Добавить" : "Изменить") + " путь кнопки" }}
         </div>
         <p-select :select="selectRoute.text">
           <div
@@ -70,21 +36,8 @@
           выбрать действие
         </div>
       </div>
-      <div class="dial_container" v-if="selectAction.type == 0">
-        <p-input
-          :label="(control ? 'Добавить' : 'Изменить') + ' ссылку кнопки'"
-          v-model="action.value"
-          :max="action.max"
-        />
-        <p-input-required :model="action" />
-        <div class="danger" v-if="dangerActionValue">
-          Не правильное значение ссылки пример : https://bot-t.ru
-        </div>
-      </div>
-      <div
-        class="dial_container"
-        v-if="selectRoute.value?.length > 0 && selectAction.type == 1"
-      >
+
+      <div class="dial_container" v-if="selectRoute.value?.length > 0">
         <div class="dial_container_head">
           {{ (control ? "Добавить" : "Изменить") + " путь кнопки" }}
         </div>
@@ -140,7 +93,7 @@
   <p-dialog :model="sure">
     <p-card class="sure_card">
       <div class="sure">
-        Вы уверены,что хотите удалить кнопку {{ data?.data.text }}?
+        Вы уверены,что хотите удалить кнопку {{ data?.route.message }}?
       </div>
       <div class="actions">
         <p-btn
@@ -207,6 +160,10 @@ export default {
       type: Object,
       required: false,
     },
+    lines: {
+      type: Object,
+      required: false,
+    },
     control: {
       type: Boolean,
       required: false,
@@ -214,34 +171,19 @@ export default {
   },
   setup() {
     return {
+      btns: ref([]),
       dangerRoute: ref(false),
       dangerKey: ref(false),
-      dangerAction: ref(false),
-      dangerActionValue: ref(false),
       selectRouteKey: ref(""),
       selectRouteText: ref(""),
       routes: ref([]),
       sure: ref(false),
       currentRoute: ref(""),
-      type: ref(0),
-      text: ref({
+      message: ref({
         value: "",
         required: false,
         min: 3,
         max: 20,
-      }),
-      action: ref({
-        value: "",
-        required: false,
-        min: 8,
-        max: 40,
-      }),
-      textarea: ref({
-        value: "",
-        required: false,
-        min: 10,
-        max: 100,
-        outlength: 100,
       }),
       selectRoute: ref({
         text: "Выберите путь",
@@ -250,32 +192,6 @@ export default {
         text_value: "",
         value: [],
       }),
-      selectAction: ref({
-        text: "Ссылка",
-        type: 0,
-      }),
-      actions: ref([
-        {
-          text: "Ссылка",
-          type: 0,
-        },
-        {
-          text: "Действие",
-          type: 1,
-        },
-        {
-          text: "Поделиться",
-          type: 2,
-        },
-        {
-          text: "Поделиться в группу",
-          type: 3,
-        },
-        {
-          text: "web",
-          type: 4,
-        },
-      ]),
     };
   },
 
@@ -288,13 +204,6 @@ export default {
       } else {
         this.selectRouteText = item;
         this.selectRouteKey = key;
-      }
-    },
-    selectType(action) {
-      this.dangerAction = false;
-      this.selectAction = action;
-      if (this.selectAction.type > 3) {
-        this.dangerAction = true;
       }
     },
     selectRoutes(route) {
@@ -317,18 +226,14 @@ export default {
         };
       }
     },
-
     closeSettings() {
       this.$emit("closeSettings");
-      this.typeBtn = false;
-      this.routeBtn = false;
-      this.dangerAction = false;
     },
     getRoutes() {
       axios
         .post(
           "https://api.bot-t.ru/v1/bot/main/actions?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA",
-          "bot_id=889&menu_id=577"
+          "bot_id=889&menu_id=26699"
         )
         .then((response) => {
           for (let rout of JSON.parse(response.data).data) {
@@ -339,7 +244,6 @@ export default {
     },
 
     configButton(deletebtn) {
-      this.dangerActionValue = false;
       this.dangerRoute = false;
       this.dangerKey = false;
       if (deletebtn) {
@@ -347,26 +251,12 @@ export default {
         this.closeSettings();
         return;
       }
-      if (this.selectAction.type > 3) {
-        return;
-      }
-      if (!this.action.required || !this.text.required) {
-        return;
-      }
-      if (this.selectAction.type == 2) {
-        if (!this.textarea.required) {
-          return;
-        }
-      }
-      if (this.selectAction.type == 3) {
-        if (!this.textarea.required) {
-          return;
-        }
-      }
-      if (!this.validateDataRoute(this.selectAction, this.selectRoute)) {
-        return;
-      }
-      if (!this.validateAtionValue(this.action.value, this.selectAction.type)) {
+
+      if (
+        !this.validateDataRoute(this.selectRoute) ||
+        this.validateRepeatButton() ||
+        !this.message.required
+      ) {
         return;
       }
 
@@ -375,116 +265,96 @@ export default {
       if (this.data.req == "add-line") {
         this.$emit(
           "addLine",
-          this.selectAction.type,
-          this.text.value,
-          this.chooseRoute(this.selectAction, this.selectRoute)
+          this.message.value,
+          this.chooseRoute(this.selectRoute)
         );
       } else if (this.data.req == "add-button") {
         this.$emit(
           "addButton",
           this.data.line,
-          this.selectAction.type,
-          this.text.value,
-          this.chooseRoute(this.selectAction, this.selectRoute)
+          this.message.value,
+          this.chooseRoute(this.selectRoute)
         );
       } else {
         this.$emit(
           "updateButton",
           this.data.id,
-          this.text.value,
-          this.chooseRoute(this.selectAction, this.selectRoute),
-          this.selectAction.type
+          this.message.value,
+          this.chooseRoute(this.selectRoute)
         );
       }
     },
-    chooseRoute(actions, routes) {
+    chooseRoute(routes) {
       let route;
-      if (actions.type == 0) {
-        route = this.action.value;
-      } else if (actions.type == 1) {
-        if (routes.value?.length > 0) {
-          if (routes.type) {
-            route = this.selectRouteKey;
-          } else {
-            route = routes.route + routes.identifier + this.selectRouteKey;
-          }
+      if (routes.value?.length > 0) {
+        if (routes.type) {
+          route = this.selectRouteKey;
         } else {
-          route = routes.route;
+          route = routes.route + routes.identifier + this.selectRouteKey;
         }
-      } else if (actions.type == 2) {
-        route = this.textarea.value;
-      } else if (actions.type == 3) {
-        route = this.textarea.value;
-      } else if (actions.type == 4) {
-        route = this.textarea.value;
+      } else {
+        route = routes.route;
       }
       return route;
     },
-    validateDataRoute(actions, routes) {
-      if (actions.type == 1) {
-        routes.route == ""
-          ? (this.dangerRoute = true)
-          : (this.dangerRoute = false);
-        if (routes.value?.length > 0 && this.selectRouteKey == "") {
-          this.dangerKey = true;
-        }
-        if (!this.dangerRoute && !this.dangerKey) {
-          return true;
-        } else {
-          return false;
-        }
-      } else {
+    validateDataRoute(routes) {
+      routes.route == ""
+        ? (this.dangerRoute = true)
+        : (this.dangerRoute = false);
+      if (routes.value?.length > 0 && this.selectRouteKey == "") {
+        this.dangerKey = true;
+      }
+      if (!this.dangerRoute && !this.dangerKey) {
         return true;
+      } else {
+        return false;
       }
     },
-    validateAtionValue(value, type) {
-      if (type == 0) {
-        if (
-          value.match(/(?:https?:\/\/)?(?:www\.)?[a-z0-9-]+\.(?:\.[a-z]{2,3})/)
-        ) {
-          return true;
-        } else {
-          this.dangerActionValue = true;
-          return false;
+    validateRepeatButton() {
+      let a = false;
+      for (let i = 0; i < this.btns.length; i++) {
+        if (this.message.value == this.btns[i]) {
+          a = true;
         }
-      } else {
-        return true;
+      }
+      return a;
+    },
+    pushButtons() {
+      this.btns = [];
+      for (let btns of this.lines) {
+        for (let btn of btns) {
+          for (let item of btn.buttons) {
+            this.btns.push(item.route.message);
+          }
+        }
       }
     },
   },
   watch: {
     model() {
+      this.pushButtons();
       let categoryText = false;
       let category = true;
-      this.selectRoute = {
-        text: "Выберите путь",
-        route: "",
-      };
-      this.action.value = "https://";
-      this.textarea.value = "Пример приветствия";
-      this.selectAction = {};
 
-      this.text.value = this.data.data.text;
-
-      this.selectAction = this.actions.find(
-        (act) => act.type == this.data.type
+      this.message.value = this.data.route.message;
+      this.selectRoute = this.routes.find(
+        (r) => r.route == this.data.route.route
       );
-
-      if (this.data.type == 0) {
-        this.action.value = this.data.data.action;
-      } else if (this.data.type == 1) {
-        this.selectRoute = this.routes.find(
-          (r) => r.route == this.data.data.action
-        );
+      if (this.data.req == "add-button" || this.data.req == "add-line") {
+        this.selectRoute = {
+          text: "Выберите путь",
+          route: "",
+        };
+      } else {
         if (this.selectRoute == undefined) {
           this.routes.forEach((r) => {
             if (r.value) {
               for (let item in r.value[0]) {
-                if (r.route + r.identifier + item == this.data.data.action) {
+                if (r.route + r.identifier + item == this.data.route.route) {
                   categoryText = true;
                   category = false;
                   let delLength = item.length + r.identifier.length;
-                  let delRoute = [...this.data.data.action];
+                  let delRoute = [...this.data.route.route];
                   delRoute.splice(-delLength, delLength);
                   this.currentRoute = delRoute.join("");
                   this.selectRouteText = r.value[0][item];
@@ -513,7 +383,7 @@ export default {
                 };
 
                 for (let item in r.value) {
-                  if (r.value[item].route == this.data.data.action) {
+                  if (r.value[item].route == this.data.route.route) {
                     this.selectRouteText = r.value[item].text;
                   }
                 }
@@ -526,41 +396,19 @@ export default {
             ? this.selectRoute.text_value
             : "";
         }
-      } else if (this.data.type == 2) {
-        this.textarea.value = this.data.data.action;
-      } else if (this.data.type == 3) {
-        this.textarea.value = this.data.data.action;
       }
     },
-    "text.value"(value) {
-      if (value.length < this.text.min) {
-        this.text.required = false;
-      } else if (value.length == this.text.max) {
-        this.text.required = false;
+    "message.value"(value) {
+      if (value.length < this.message.min) {
+        this.message.required = false;
+      } else if (value.length == this.message.max) {
+        this.message.required = false;
       } else {
-        this.text.required = true;
-      }
-    },
-    "action.value"(value) {
-      if (value.length < this.action.min) {
-        this.action.required = false;
-      } else if (value.length == this.action.max) {
-        this.action.required = false;
-      } else {
-        this.action.required = true;
-      }
-    },
-    "textarea.value"(value) {
-      this.textarea.outlength = this.textarea.max - value.length;
-      if (value.length < this.textarea.min) {
-        this.textarea.required = false;
-      } else if (value.length == this.textarea.max) {
-        this.textarea.required = false;
-      } else {
-        this.textarea.required = true;
+        this.message.required = true;
       }
     },
   },
+
   mounted() {
     this.getRoutes();
   },
@@ -669,6 +517,9 @@ export default {
   border-radius: 0 !important;
   max-width: 100vw;
   max-height: 100vh;
+}
+.keyboard-label {
+  font-size: 18px;
 }
 @media (max-width: 440px) {
   .sure_card {

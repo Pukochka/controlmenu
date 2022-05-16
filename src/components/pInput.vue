@@ -3,7 +3,7 @@
   <input
     class="input"
     :type="type"
-    :style="{ borderBottom: `1px solid ${bordercolor};` }"
+    :style="{ borderBottom: `1px solid ${bordercolor};`, width: width }"
     :value="modelValue"
     :maxlength="+max"
     @input="$emit('update:modelValue', $event.target.value)"
@@ -33,6 +33,11 @@ export default {
       required: false,
     },
     type: {
+      type: String,
+      required: false,
+      default: "text",
+    },
+    width: {
       type: String,
       required: false,
       default: "text",

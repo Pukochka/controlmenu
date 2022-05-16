@@ -38,7 +38,7 @@
             <template #item="{ element }">
               <div class="button my-button">
                 <div class="button_helper"></div>
-                <div class="wrapword">{{ element.data.text }}</div>
+                <div class="wrapword">{{ element.route.message }}</div>
               </div>
             </template>
           </draggable>
@@ -123,7 +123,7 @@ export default {
         this.$emit(
           "sortBtn",
           this.line,
-          evt.moved.newIndex,
+          evt.moved.newIndex + "",
           evt.moved.element.id
         );
       }
@@ -137,17 +137,11 @@ export default {
       }
       window.console.log(evt);
     },
-    kol(evt) {
-      console.log(evt);
-    },
     getLineId(line) {
       this.line = line.id;
     },
     close() {
       this.$emit("closeDrag");
-    },
-    threeLetters(word) {
-      return [...word].splice(0, 3).join("") + "..";
     },
     checkLength(evt) {
       if (evt.path[1].childNodes.length > 10) {

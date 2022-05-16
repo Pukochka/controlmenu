@@ -2,7 +2,7 @@
   <div class="body">
     <p-card class="card_area">
       <div class="flex justify-between">
-        <div class="header">Настройки кнопок меню</div>
+        <div class="header">Настройки базового меню</div>
 
         <p-spinner :model="requestWaiting" />
       </div>
@@ -14,8 +14,8 @@
             <div class="messanger_avatar_img"></div>
           </div>
           <div class="messanger_content your">
-            <div class="messanger_content_text">Настройки меню</div>
-            <div class="messanger_content_info">10.01 10:00</div>
+            <div class="messanger_content_text">Базовое меню</div>
+            <div class="messanger_content_info">11.01 10:00</div>
           </div>
         </div>
 
@@ -26,8 +26,18 @@
           <div class="container">
             <div class="messanger_content">
               <div class="messanger_content_text">Меню</div>
-              <div class="messanger_content_info">10.01 10:01</div>
+              <div class="messanger_content_info">11.01 10:01</div>
             </div>
+            <p-btn
+              label="Настройки всего меню"
+              color="#ddd"
+              textcolor="#333"
+              size="18px"
+              margin="5px"
+              padding="8px 0"
+              @click="dialMenuSettings = !dialMenuSettings"
+            >
+            </p-btn>
             <div class="container_btn">
               <div
                 class="container_btn_lines"
@@ -57,11 +67,11 @@
                       class="button"
                       v-for="(btn, index) in btns.buttons"
                       :key="index"
-                      :class="{ break: wordBreak(btn.data.text) }"
+                      :class="{ break: wordBreak(btn.route.message) }"
                       @click="selectBtn(btn, btns)"
                     >
                       <div class="button_helper"></div>
-                      {{ btn.data.text }}
+                      {{ btn.route.message }}
                     </div>
                     <div
                       v-if="btns.buttons.length < 10"
@@ -74,18 +84,25 @@
                   </TransitionGroup>
                 </div>
               </div>
-              <div
-                class="button line"
+              <p-btn
                 v-if="lines[0]?.length < 10"
                 @click="addLine()"
-              >
-                <div class="button_helper"></div>
-                Добавить линию
-              </div>
-              <div class="button line" @click="dialDrag = !dialDrag">
-                <div class="button_helper"></div>
-                Переместить кнопки
-              </div>
+                label="Добавить линию"
+                margin="5px"
+                size="18px"
+                color="#ddd"
+                textcolor="#333"
+                padding="8px 0"
+              />
+              <p-btn
+                padding="8px 0"
+                label="Переместить кнопки"
+                color="#ddd"
+                size="18px"
+                textcolor="#333"
+                margin="5px"
+                @click="dialDrag = !dialDrag"
+              />
               <div class="danger" v-if="lines[0]?.length == 10">
                 Достигнуто максимальное количество линий
               </div>
@@ -96,6 +113,13 @@
     </p-card>
   </div>
 
+  <dial-menu-settings
+    :model="dialMenuSettings"
+    :settings="menuSettings"
+    @closeMenuSettings="closeMenuSettings"
+    @saveSettings="saveSettings"
+  />
+
   <dial-drag
     :render="lines"
     :model="dialDrag"
@@ -104,6 +128,7 @@
   />
 
   <dial-setting
+    :lines="lines"
     :control="control"
     :model="dialSettings"
     :data="select"
@@ -146,6 +171,7 @@
 import axios from "axios";
 import { ref } from "vue";
 import dialSetting from "./components/dialSettings.vue";
+import dialMenuSetting from "./components/dialMenuSettings.vue";
 import dialDrag from "./components/dialDrag.vue";
 import pBtn from "./components/pBtn.vue";
 import pCard from "./components/pCard.vue";
@@ -156,6 +182,7 @@ import pSpinner from "./components/pSpinner.vue";
 export default {
   components: {
     "dial-setting": dialSetting,
+    "dial-menu-settings": dialMenuSetting,
     "dial-drag": dialDrag,
     "p-btn": pBtn,
     "p-card": pCard,
@@ -167,63 +194,104 @@ export default {
     return {
       lines: ref([]),
       dialSettings: ref(false),
+      dialMenuSettings: ref(false),
+      dialDrag: ref(false),
       deleteLineDial: ref(false),
       danger: ref(true),
       configButton: ref({}),
       selectLine: ref(0),
       requestWaiting: ref(false),
-      dialDrag: ref(false),
       menu: ref(0),
+      menuSettings: ref({}),
       control: ref(false),
       select: ref({
-        data: {
-          text: "",
-          action: "https://",
+        id: 0,
+        line_id: 0,
+        request_contact: false,
+        request_location: false,
+        request_poll: null,
+        route: {
+          id: 0,
+          message: "",
+          route: "",
         },
-        type: 0,
+        sort: 0,
       }),
     };
   },
   methods: {
+    closeMenuSettings() {
+      this.dialMenuSettings = !this.dialMenuSettings;
+    },
     closeSettings() {
       this.dialSettings = !this.dialSettings;
     },
     closeDrag() {
       this.dialDrag = !this.dialDrag;
     },
-    requestAddBtnInLine(line_id, type, text, action) {
+    saveSettings(input, size, time) {
+      this.requestWaiting = true;
+      try {
+        axios
+          .post(
+            `https://api.bot-t.ru/v1/bot/keyboard/reply-keyboard/update?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA`,
+            {
+              bot_id: 889,
+              menu_id: 26699,
+              input_field_placeholder: input,
+              resize_keyboard: size,
+              one_time_keyboard: time,
+            }
+          )
+          .then((response) => {
+            this.lines = [];
+            for (let line of JSON.parse(response.data).data) {
+              this.lines.push(line.lines);
+
+              this.menuSettings = line;
+            }
+            if (response.status == 200) {
+              this.requestWaiting = false;
+            }
+
+            setTimeout(() => {
+              this.scrollArea();
+            }, 10);
+          });
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    requestAddBtnInLine(line_id, message, route) {
       this.request(
         "add-button-in-line",
         null,
         line_id,
         null,
-        type + "",
-        text,
-        action,
+        message,
+        route,
         null
       );
     },
-    requestAddBtnWithLine(type, text, action) {
+    requestAddBtnWithLine(message, route) {
       this.request(
         "add-button-with-line",
-        this.menu,
+        26699,
         null,
         null,
-        type + "",
-        text,
-        action,
+        message,
+        route,
         null
       );
     },
-    requestUpdateData(button_id, text, action, type) {
+    requestUpdateData(button_id, message, route) {
       this.request(
-        "update-data-and-type",
+        "update-button",
         null,
         null,
         button_id,
-        type + "",
-        text,
-        action,
+        message,
+        route,
         null
       );
     },
@@ -235,37 +303,15 @@ export default {
         button_id,
         null,
         null,
-        null,
         sort + ""
       );
     },
-    requestUpdateTypeButton(button_id, type) {
-      this.request(
-        "update-type-button",
-        null,
-        null,
-        button_id,
-        type,
-        null,
-        null,
-        null
-      );
-    },
     requestDeleteButton(button_id) {
-      this.request(
-        "delete-button",
-        null,
-        null,
-        button_id,
-        null,
-        null,
-        null,
-        null
-      );
+      this.request("delete-button", null, null, button_id, null, null, null);
     },
     requestDeleteLine(line_id) {
       this.danger = true;
-      this.request("delete-line", null, line_id, null, null, null, null, null);
+      this.request("delete-line", null, line_id, null, null, null, null);
     },
     addBtn(line) {
       this.dialSettings = !this.dialSettings;
@@ -273,10 +319,13 @@ export default {
       this.select = {
         req: "add-button",
         line: line,
-        type: 0,
-        data: {
-          text: "",
-          action: "https://",
+        request_contact: false,
+        request_location: false,
+        request_poll: null,
+        route: {
+          id: 0,
+          message: "",
+          route: "",
         },
       };
     },
@@ -292,26 +341,27 @@ export default {
       this.control = true;
       this.select = {
         req: "add-line",
-        type: 0,
-        data: {
-          text: "",
-          action: "https://",
+        request_contact: false,
+        request_location: false,
+        request_poll: null,
+        route: {
+          message: "",
+          route: "",
         },
       };
     },
-    request(req, menu_id, line_id, button_id, type, text, action, sort) {
+    request(req, menu_id, line_id, button_id, message, route, sort) {
       this.requestWaiting = true;
       try {
         axios
           .post(
-            `https://api.bot-t.ru/v1/bot/keyboard/inline-keyboard/${req}?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA`,
+            `https://api.bot-t.ru/v1/bot/keyboard/reply-keyboard/${req}?token=1250754763:AAHCrhde6Hzz-PKOf-072dpZIFyPjh2obkA`,
             this.createPostParams(
               menu_id,
               line_id,
               button_id,
-              type,
-              text,
-              action,
+              message,
+              route,
               sort
             )
           )
@@ -319,12 +369,11 @@ export default {
             this.lines = [];
             for (let line of JSON.parse(response.data).data) {
               this.lines.push(line.lines);
-              console.log(this.lines);
+              this.menuSettings = line;
             }
             if (response.status == 200) {
               this.requestWaiting = false;
             }
-            this.menu = JSON.parse(response.data).data[0].id;
 
             setTimeout(() => {
               this.scrollArea();
@@ -334,14 +383,11 @@ export default {
         console.log(err);
       }
     },
-    createPostParams(menu_id, line_id, id, type, text, action, sort) {
-      const params = {
+    createPostParams(menu_id, line_id, id, message, route, sort) {
+      let params = {
         bot_id: 889,
       };
-      console.log(menu_id, line_id, id, type, text, action, sort);
-      // let args = Array.from(arguments);
 
-      console.log(params);
       if (menu_id) {
         params.menu_id = menu_id;
       }
@@ -351,18 +397,16 @@ export default {
       if (id) {
         params.id = id;
       }
-      if (type) {
-        params.type = type;
+      if (message) {
+        params.message = message;
       }
-      if (text) {
-        params.text = text;
-      }
-      if (action) {
-        params.action = action;
+      if (route) {
+        params.route = route;
       }
       if (sort) {
         params.sort = sort;
       }
+      console.log(params);
       return params;
     },
     selectBtn(btn) {
@@ -399,7 +443,7 @@ export default {
     },
   },
   mounted() {
-    this.request("view", 577, null, null, null, null, null, null);
+    this.request("view", 26699, null, null, null, null, null);
   },
 };
 </script>
@@ -431,7 +475,7 @@ export default {
 }
 .header {
   padding: 8px 10px;
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 500;
 }
 .card_area {
@@ -440,7 +484,7 @@ export default {
 }
 .danger {
   color: red;
-  font-size: 11px;
+  font-size: 16px;
 }
 .button {
   width: 100px;
@@ -451,9 +495,8 @@ export default {
   align-items: center;
   text-align: center;
   background: #ddd;
-  font-size: 13px;
+  font-size: 16px;
   border-radius: 4px;
-  box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
   cursor: pointer;
   user-select: none;
   pointer-events: all;
@@ -523,7 +566,7 @@ export default {
     margin-left: 5px;
     &_info {
       padding-top: 10px;
-      font-size: 10px;
+      font-size: 16px;
       margin: 0 10px;
     }
     &.your {
@@ -531,6 +574,9 @@ export default {
       flex-direction: row-reverse;
       margin-right: 5px;
       margin-left: 0;
+    }
+    &_text {
+      font-size: 22px;
     }
   }
   &_avatar {
@@ -589,9 +635,6 @@ export default {
 }
 .container_btn {
   width: 100%;
-  background: #ccc;
-  border-radius: 4px;
-  box-shadow: 0 1px 5px #0003, 0 2px 2px #00000024, 0 3px 1px -2px #0000001f;
   padding: 4px;
   margin-top: 5px;
   &_btns {
@@ -608,12 +651,8 @@ export default {
       background: rgb(169, 167, 167);
       border-radius: 5px;
     }
-    &::-webkit-scrollbar-track {
-      background: #ccc;
-    }
   }
 }
-
 @media (max-width: 700px) {
   .btnwid {
     max-width: 100px;
@@ -621,18 +660,18 @@ export default {
 }
 @media (max-width: 440px) {
   .header {
-    font-size: 20px;
+    font-size: 26px;
   }
 }
 @media (max-width: 400px) {
   .header {
-    font-size: 18px;
+    font-size: 24px;
   }
   .text {
-    font-size: 13px;
+    font-size: 18px;
   }
   .info {
-    font-size: 9px;
+    font-size: 14px;
   }
 }
 </style>
