@@ -5,9 +5,12 @@
       <p-separator />
       <div class="menu_container">
         <div class="menu_container_item">
-          <div class="">Изменение поля для ввода</div>
-          <div class="">
-            <p-input v-model="input.value" :max="input.max" />
+          <div class="menu_container_relative">
+            <p-input
+              label="Изменение поля для ввода"
+              v-model="input.value"
+              :max="input.max"
+            />
           </div>
         </div>
 
@@ -164,6 +167,9 @@ export default {
     // flex-direction: column;
     // align-items: center;
     padding: 10px;
+    &_relative {
+      position: relative;
+    }
   }
 }
 .actions {

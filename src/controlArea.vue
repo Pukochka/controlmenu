@@ -219,6 +219,12 @@ export default {
       }),
     };
   },
+  props: {
+    bot: Object,
+    menu_id: Number,
+    host: String,
+    routes: Array,
+  },
   methods: {
     closeMenuSettings() {
       this.dialMenuSettings = !this.dialMenuSettings;

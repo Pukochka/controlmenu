@@ -312,9 +312,17 @@ export default {
     },
     validateRepeatButton() {
       let a = false;
-      for (let i = 0; i < this.btns.length; i++) {
-        if (this.message.value == this.btns[i]) {
-          a = true;
+      if (this.data.req) {
+        for (let i = 0; i < this.btns.length; i++) {
+          if (this.message.value == this.btns[i]) {
+            a = true;
+          }
+        }
+      } else {
+        for (let btn of this.btns.filter((b) => b != this.data.route.message)) {
+          if (this.message.value == btn) {
+            a = true;
+          }
         }
       }
       return a;
